@@ -8,6 +8,15 @@ interface PitchCardProps {
 }
 
 export function PitchCard({ pitch, onView }: PitchCardProps) {
+  // Add a safety check to ensure pitch and pitch.media exist
+  if (!pitch || !pitch.media) {
+    return (
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4 flex items-center justify-center h-64">
+        <p className="text-gray-500 dark:text-gray-400">Pitch data unavailable</p>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden hover:shadow-md transition-shadow">
       <div 
@@ -30,14 +39,16 @@ export function PitchCard({ pitch, onView }: PitchCardProps) {
         
         <div className="p-6">
           <div className="flex items-center gap-4 mb-4">
-            <img
-              src={pitch.author.avatar}
-              alt={pitch.author.name}
-              className="w-12 h-12 rounded-full object-cover"
-            />
+            {pitch.author && pitch.author.avatar && (
+              <img
+                src={pitch.author.avatar}
+                alt={pitch.author.name || "Author"}
+                className="w-12 h-12 rounded-full object-cover"
+              />
+            )}
             <div>
-              <h3 className="font-medium dark:text-gray-200">{pitch.author.name}</h3>
-              <p className="text-sm text-gray-500 dark:text-gray-400">{pitch.author.role}</p>
+              <h3 className="font-medium dark:text-gray-200">{pitch.author?.name || "Unknown Author"}</h3>
+              <p className="text-sm text-gray-500 dark:text-gray-400">{pitch.author?.role || "Unknown Role"}</p>
             </div>
           </div>
           
@@ -45,7 +56,7 @@ export function PitchCard({ pitch, onView }: PitchCardProps) {
           <p className="text-gray-600 dark:text-gray-400 mb-4 line-clamp-3">{pitch.description}</p>
           
           <div className="flex flex-wrap gap-2 mb-4">
-            {pitch.tags.map((tag) => (
+            {pitch.tags && pitch.tags.map((tag) => (
               <span
                 key={tag}
                 className="px-3 py-1 bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 rounded-full text-sm"
@@ -61,11 +72,11 @@ export function PitchCard({ pitch, onView }: PitchCardProps) {
         <div className="flex items-center gap-6">
           <button className="flex items-center gap-2 text-gray-500 dark:text-gray-400 hover:text-primary-500 dark:hover:text-primary-400 transition-colors">
             <Heart className="w-5 h-5" />
-            <span>{pitch.likes}</span>
+            <span>{pitch.likes || 0}</span>
           </button>
           <button className="flex items-center gap-2 text-gray-500 dark:text-gray-400 hover:text-primary-500 dark:hover:text-primary-400 transition-colors">
             <MessageCircle className="w-5 h-5" />
-            <span>{pitch.comments}</span>
+            <span>{pitch.comments || 0}</span>
           </button>
         </div>
         <button className="text-gray-500 dark:text-gray-400 hover:text-primary-500 dark:hover:text-primary-400 transition-colors">

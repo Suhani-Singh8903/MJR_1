@@ -7,6 +7,7 @@ import cors from 'cors';
 import sequelize from './config/database.js';
 import authRoutes from './routes/authRoutes.js';
 import profileRoutes from './routes/profileRoutes.js';
+import pitchRoutes from './routes/pitchRoutes.js';
 import setupAssociations from './models/associations.js';
 import User from './models/user_data.js';
 import Profile from './models/profile.js';
@@ -42,6 +43,7 @@ app.get('/debug', (req, res) => {
 // Setup routes
 app.use('/api', authRoutes);
 app.use('/api', profileRoutes);
+app.use('/api', pitchRoutes);
 
 // Initialize database and start server
 const startServer = async () => {

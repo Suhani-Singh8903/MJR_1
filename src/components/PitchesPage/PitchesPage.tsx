@@ -4,7 +4,8 @@ import { PitchesGrid } from './PitchesGrid';
 import { PitchEditor } from './PitchEditor';
 import { PitchModal } from './PitchModal';
 import { Pitch } from '../../types/pitch';
-import { PitchAPI } from '../../lib/api/pitch';
+import { getPitches, createPitch, deletePitch, updatePitch, likePitch } from '../../lib/api/pitch';
+
 import { useAuth } from '../../contexts/AuthContext';
 import { LoadingSpinner } from '../common/LoadingSpinner';
 
@@ -22,8 +23,25 @@ export function PitchesPage() {
 
   const loadPitches = async () => {
     try {
-      const { data } = await PitchAPI.getAllPitches();
-      setPitches(data);
+      const userId = user?.id || localStorage.getItem('user_id');
+      if (!userId) {
+        setError('User not logged in');
+        setLoading(false);
+        return;
+      }
+
+      const response = await getPitches(userId);
+      console.log('Fetched pitches data:', response);
+      console.log('Data type:', typeof response);
+      console.log('Is Array:', Array.isArray(response));
+      
+      // Extract the pitches array from the response object
+      const pitchesArray = response && response.pitches && Array.isArray(response.pitches) 
+        ? response.pitches 
+        : [];
+      
+      console.log('Extracted pitches array:', pitchesArray);
+      setPitches(pitchesArray);
     } catch (err) {
       console.error('Error loading pitches:', err);
       setError('Failed to load pitches');
@@ -34,7 +52,27 @@ export function PitchesPage() {
 
   const handleSavePitch = async (formData: FormData) => {
     try {
-      await PitchAPI.createPitch(formData);
+      const userId = localStorage.getItem('user_id');
+      if (!userId) {
+        setError('User not logged in');
+        return;
+      }
+
+      await createPitch(userId, {
+        title: formData.get('title') as string,
+        description: formData.get('description') as string,
+        tags: formData.getAll('tags') as string[],
+        media: {
+          url: formData.get('mediaUrl') as string,
+          type: formData.get('mediaType') as string,
+        },
+        author: {
+          name: formData.get('authorName') as string,
+          avatar: formData.get('authorAvatar') as string,
+          role: formData.get('authorRole') as string,
+        },
+      });
+
       await loadPitches();
       setIsEditing(false);
     } catch (err) {
@@ -45,7 +83,7 @@ export function PitchesPage() {
 
   const handleLikePitch = async (pitchId: string) => {
     try {
-      await PitchAPI.likePitch(pitchId);
+      await likePitch(pitchId);
       await loadPitches();
     } catch (err) {
       console.error('Error liking pitch:', err);
@@ -56,10 +94,16 @@ export function PitchesPage() {
   if (loading) return <LoadingSpinner />;
   if (error) return <div className="p-8 text-center text-red-500">{error}</div>;
 
+  console.log('Rendering PitchesGrid with pitches:', pitches);
+  console.log('Is pitches an array?', Array.isArray(pitches));
+
   return (
     <div className="p-8">
       <PitchesHeader onCreatePitch={() => setIsEditing(true)} />
-      <PitchesGrid pitches={pitches} onViewPitch={setSelectedPitch} />
+      <PitchesGrid 
+        pitches={Array.isArray(pitches) ? pitches : []} 
+        onViewPitch={setSelectedPitch} 
+      />
 
       {isEditing && (
         <PitchEditor
